@@ -11,7 +11,9 @@ import SwiftUI
 
 enum ComparisonMode {
   case sideBySide
+  case verticalSideBySide
   case overlay
+  case slide
 }
 
 struct ContentView: View {
@@ -31,34 +33,124 @@ struct ContentView: View {
       VStack(spacing: 16) {
         if selectedItem != nil {
           if let leftImage, let rightImage {
-            if comparisonMode == .sideBySide {
+            switch comparisonMode {
+            case .sideBySide:
               HStack(spacing: 8) {
-                Image(decorative: leftImage, scale: 1, orientation: orientation ?? .up)
-                  .resizable()
-                  .aspectRatio(contentMode: .fit)
+                Image(
+                  decorative: leftImage,
+                  scale: 1,
+                  orientation: orientation ?? .up
+                )
+                .resizable()
+                .aspectRatio(contentMode: .fit)
 
-                Image(decorative: rightImage, scale: 1, orientation: orientation ?? .up)
-                  .resizable()
-                  .aspectRatio(contentMode: .fit)
+                Image(
+                  decorative: rightImage,
+                  scale: 1,
+                  orientation: orientation ?? .up
+                )
+                .resizable()
+                .aspectRatio(contentMode: .fit)
               }
-            } else {
-              ZStack {
-                Image(decorative: leftImage, scale: 1, orientation: orientation ?? .up)
-                  .resizable()
-                  .aspectRatio(contentMode: .fit)
+            case .verticalSideBySide:
+              VStack(spacing: 8) {
+                Image(
+                  decorative: leftImage,
+                  scale: 1,
+                  orientation: orientation ?? .up
+                )
+                .resizable()
+                .aspectRatio(contentMode: .fit)
 
-                Image(decorative: rightImage, scale: 1, orientation: orientation ?? .up)
-                  .resizable()
-                  .aspectRatio(contentMode: .fit)
-                  .mask(alignment: .leading) {
-                    GeometryReader { proxy in
-                      Rectangle()
-                        .frame(maxWidth: proxy.size.width * value)
-                    }
+                Image(
+                  decorative: rightImage,
+                  scale: 1,
+                  orientation: orientation ?? .up
+                )
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+              }
+            case .overlay:
+              ZStack {
+                Image(
+                  decorative: leftImage,
+                  scale: 1,
+                  orientation: orientation ?? .up
+                )
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+
+                Image(
+                  decorative: rightImage,
+                  scale: 1,
+                  orientation: orientation ?? .up
+                )
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .mask(alignment: .leading) {
+                  GeometryReader { proxy in
+                    Rectangle()
+                      .frame(maxWidth: proxy.size.width * value)
                   }
+                }
               }
 
               Slider(value: $value, in: 0...1)
+            case .slide:
+              ZStack {
+                GeometryReader { proxy in
+                  ZStack {
+                    Image(
+                      decorative: leftImage,
+                      scale: 1,
+                      orientation: orientation ?? .up
+                    )
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+
+                    LinearGradient(
+                      gradient: Gradient(
+                        colors: [
+                          .black.opacity(0),
+                          .black.opacity(0.5),
+                        ]
+                      ),
+                      startPoint: .leading,
+                      endPoint: .trailing
+                    )
+                    .blendMode(.destinationOut)
+                  }
+                  .compositingGroup()
+                  .offset(x: -proxy.size.width * value)
+
+                  ZStack {
+                    Image(
+                      decorative: rightImage,
+                      scale: 1,
+                      orientation: orientation ?? .up
+                    )
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+
+                    LinearGradient(
+                      gradient: Gradient(
+                        colors: [
+                          .black.opacity(0),
+                          .black.opacity(0.5),
+                        ]
+                      ),
+                      startPoint: .trailing,
+                      endPoint: .leading
+                    )
+                    .blendMode(.destinationOut)
+                  }
+                  .compositingGroup()
+                  .offset(x: proxy.size.width * value)
+                }
+              }
+
+              Slider(value: $value, in: 0...0.03)
+              Text("\(value)")
             }
           } else if let imageURL {
             AsyncImage(url: imageURL) {
@@ -86,20 +178,93 @@ struct ContentView: View {
       .padding()
       .toolbar {
         ToolbarItem(placement: .primaryAction) {
-          if comparisonMode == .overlay {
-            Button {
-              comparisonMode = .sideBySide
-            } label: {
-              Image(systemName: "rectangle.split.2x1")
+          HStack(spacing: 8) {
+            switch comparisonMode {
+            case .overlay:
+              Button {
+                comparisonMode = .sideBySide
+              } label: {
+                Image(systemName: "rectangle.split.2x1")
+              }
+              .accessibilityLabel(Text("Side by side"))
+
+              Button {
+                comparisonMode = .verticalSideBySide
+              } label: {
+                Image(systemName: "rectangle.split.1x2")
+              }
+              .accessibilityLabel(Text("Vertical side by side"))
+
+              Button {
+                comparisonMode = .slide
+              } label: {
+                Image(systemName: "square.stack.3d.down.forward")
+              }
+              .accessibilityLabel(Text("Slide"))
+            case .sideBySide:
+              Button {
+                comparisonMode = .verticalSideBySide
+              } label: {
+                Image(systemName: "rectangle.split.1x2")
+              }
+              .accessibilityLabel(Text("Vertical side by side"))
+
+              Button {
+                comparisonMode = .overlay
+              } label: {
+                Image(systemName: "rectangle.on.rectangle")
+              }
+              .accessibilityLabel(Text("Overlay"))
+
+              Button {
+                comparisonMode = .slide
+              } label: {
+                Image(systemName: "square.stack.3d.down.forward")
+              }
+              .accessibilityLabel(Text("Slide"))
+            case .verticalSideBySide:
+              Button {
+                comparisonMode = .sideBySide
+              } label: {
+                Image(systemName: "rectangle.split.2x1")
+              }
+              .accessibilityLabel(Text("Side by side"))
+
+              Button {
+                comparisonMode = .overlay
+              } label: {
+                Image(systemName: "rectangle.on.rectangle")
+              }
+              .accessibilityLabel(Text("Overlay"))
+
+              Button {
+                comparisonMode = .slide
+              } label: {
+                Image(systemName: "square.stack.3d.down.forward")
+              }
+              .accessibilityLabel(Text("Slide"))
+            case .slide:
+              Button {
+                comparisonMode = .sideBySide
+              } label: {
+                Image(systemName: "rectangle.split.2x1")
+              }
+              .accessibilityLabel(Text("Side by side"))
+
+              Button {
+                comparisonMode = .verticalSideBySide
+              } label: {
+                Image(systemName: "rectangle.split.1x2")
+              }
+              .accessibilityLabel(Text("Vertical side by side"))
+
+              Button {
+                comparisonMode = .overlay
+              } label: {
+                Image(systemName: "rectangle.on.rectangle")
+              }
+              .accessibilityLabel(Text("Overlay"))
             }
-            .accessibilityLabel(Text("Split"))
-          } else if comparisonMode == .sideBySide {
-            Button {
-              comparisonMode = .overlay
-            } label: {
-              Image(systemName: "rectangle.on.rectangle")
-            }
-            .accessibilityLabel(Text("Overlay"))
           }
         }
       }
