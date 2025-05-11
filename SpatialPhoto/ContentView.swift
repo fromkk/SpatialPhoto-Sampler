@@ -16,6 +16,11 @@ enum ComparisonMode {
   case slide
 }
 
+enum OverlayMode: String, CaseIterable {
+  case motionManager
+  case manual
+}
+
 struct ContentView: View {
   @Bindable var motionManager = MotionManager()
 
@@ -28,11 +33,16 @@ struct ContentView: View {
 
   @State var value: Double = 0
   @State var comparisonMode: ComparisonMode = .sideBySide
+  @State var overlayMode: OverlayMode = .motionManager
 
   var adjustedValue: CGFloat {
-    // value = 0 (左傾き), 0.015 (中央), 0.03 (右傾き) にマッピング
-    let normalizedValue = min(max((motionManager.roll + .pi / 4) / (.pi / 2), 0), 1)
-    return 0.015 + (normalizedValue - 0.5) * 0.03
+    if overlayMode == .motionManager {
+      // value = 0 (左傾き), 0.015 (中央), 0.03 (右傾き) にマッピング
+      let normalizedValue = min(max((motionManager.deviceTilt + .pi / 4) / (.pi / 2), 0), 1)
+      return 0.015 + (normalizedValue - 0.5) * 0.03
+    } else {
+      return value
+    }
   }
 
   var body: some View {
@@ -155,9 +165,23 @@ struct ContentView: View {
                   .offset(x: proxy.size.width * adjustedValue)
                 }
               }
-
-              Slider(value: .constant(adjustedValue), in: 0...0.03)
+              Slider(
+                value: overlayMode == .motionManager ? .constant(adjustedValue) : $value,
+                in: 0...0.03)
               Text("\(adjustedValue)")
+
+              Picker(
+                selection: $overlayMode,
+                content: {
+                  ForEach(OverlayMode.allCases, id: \.self) {
+                    Text($0.rawValue)
+                  }
+                },
+                label: {
+                  Text("Overlay Mode")
+                }
+              )
+              .pickerStyle(.segmented)
             }
           } else if let imageURL {
             AsyncImage(url: imageURL) {
