@@ -9,6 +9,11 @@ import Photos
 import PhotosUI
 import SwiftUI
 
+enum ComparisonMode {
+  case sideBySide
+  case overlay
+}
+
 struct ContentView: View {
 
   @State var isPresented: Bool = false
@@ -19,44 +24,86 @@ struct ContentView: View {
   @State var orientation: Image.Orientation? = nil
 
   @State var value: Double = 0
+  @State var comparisonMode: ComparisonMode = .sideBySide
 
   var body: some View {
-    VStack(spacing: 16) {
-      if selectedItem != nil {
-        if let leftImage, let rightImage {
-          HStack(spacing: 8) {
-            Image(decorative: leftImage, scale: 1, orientation: orientation ?? .up)
-              .resizable()
-              .aspectRatio(contentMode: .fit)
+    NavigationStack {
+      VStack(spacing: 16) {
+        if selectedItem != nil {
+          if let leftImage, let rightImage {
+            if comparisonMode == .sideBySide {
+              HStack(spacing: 8) {
+                Image(decorative: leftImage, scale: 1, orientation: orientation ?? .up)
+                  .resizable()
+                  .aspectRatio(contentMode: .fit)
 
-            Image(decorative: rightImage, scale: 1, orientation: orientation ?? .up)
-              .resizable()
-              .aspectRatio(contentMode: .fit)
-          }
-        } else if let imageURL {
-          AsyncImage(url: imageURL) {
-            switch $0 {
-            case let .success(image):
-              image
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-            default:
-              ProgressView()
+                Image(decorative: rightImage, scale: 1, orientation: orientation ?? .up)
+                  .resizable()
+                  .aspectRatio(contentMode: .fit)
+              }
+            } else {
+              ZStack {
+                Image(decorative: leftImage, scale: 1, orientation: orientation ?? .up)
+                  .resizable()
+                  .aspectRatio(contentMode: .fit)
+
+                Image(decorative: rightImage, scale: 1, orientation: orientation ?? .up)
+                  .resizable()
+                  .aspectRatio(contentMode: .fit)
+                  .mask(alignment: .leading) {
+                    GeometryReader { proxy in
+                      Rectangle()
+                        .frame(maxWidth: proxy.size.width * value)
+                    }
+                  }
+              }
+
+              Slider(value: $value, in: 0...1)
             }
+          } else if let imageURL {
+            AsyncImage(url: imageURL) {
+              switch $0 {
+              case let .success(image):
+                image
+                  .resizable()
+                  .aspectRatio(contentMode: .fit)
+              default:
+                ProgressView()
+              }
+            }
+          } else {
+            ProgressView()
           }
-        } else {
-          ProgressView()
+        }
+
+        Button {
+          isPresented = true
+        } label: {
+          Text("Pick Spatial Image")
+        }
+        .buttonStyle(.borderedProminent)
+      }
+      .padding()
+      .toolbar {
+        ToolbarItem(placement: .primaryAction) {
+          if comparisonMode == .overlay {
+            Button {
+              comparisonMode = .sideBySide
+            } label: {
+              Image(systemName: "rectangle.split.2x1")
+            }
+            .accessibilityLabel(Text("Split"))
+          } else if comparisonMode == .sideBySide {
+            Button {
+              comparisonMode = .overlay
+            } label: {
+              Image(systemName: "rectangle.on.rectangle")
+            }
+            .accessibilityLabel(Text("Overlay"))
+          }
         }
       }
-
-      Button {
-        isPresented = true
-      } label: {
-        Text("Pick Spatial Image")
-      }
-      .buttonStyle(.borderedProminent)
     }
-    .padding()
     .photosPicker(
       isPresented: $isPresented,
       selection: Binding<PhotosPickerItem?>(
