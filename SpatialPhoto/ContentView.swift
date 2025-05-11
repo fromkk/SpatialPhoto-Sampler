@@ -17,6 +17,7 @@ enum ComparisonMode {
 }
 
 struct ContentView: View {
+  @Bindable var motionManager = MotionManager()
 
   @State var isPresented: Bool = false
   @State var selectedItem: PhotosPickerItem?
@@ -27,6 +28,12 @@ struct ContentView: View {
 
   @State var value: Double = 0
   @State var comparisonMode: ComparisonMode = .sideBySide
+
+  var adjustedValue: CGFloat {
+    // value = 0 (左傾き), 0.015 (中央), 0.03 (右傾き) にマッピング
+    let normalizedValue = min(max((motionManager.roll + .pi / 4) / (.pi / 2), 0), 1)
+    return 0.015 + (normalizedValue - 0.5) * 0.03
+  }
 
   var body: some View {
     NavigationStack {
@@ -121,7 +128,7 @@ struct ContentView: View {
                     .blendMode(.destinationOut)
                   }
                   .compositingGroup()
-                  .offset(x: -proxy.size.width * value)
+                  .offset(x: -proxy.size.width * adjustedValue)
 
                   ZStack {
                     Image(
@@ -145,12 +152,12 @@ struct ContentView: View {
                     .blendMode(.destinationOut)
                   }
                   .compositingGroup()
-                  .offset(x: proxy.size.width * value)
+                  .offset(x: proxy.size.width * adjustedValue)
                 }
               }
 
-              Slider(value: $value, in: 0...0.03)
-              Text("\(value)")
+              Slider(value: .constant(adjustedValue), in: 0...0.03)
+              Text("\(adjustedValue)")
             }
           } else if let imageURL {
             AsyncImage(url: imageURL) {
