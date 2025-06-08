@@ -2,6 +2,7 @@ import CoreGraphics
 import Photos
 import PhotosUI
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct GenerateSplitView: View {
   @State var leftImage: CGImage?
@@ -265,6 +266,69 @@ struct GenerateSplitView: View {
 
   func splitAndGenerateSpatialPhoto() {
     guard let leftImage else { return }
+
+    Task {
+      do {
+        // 画像のサイズを取得
+        let width = leftImage.width
+        let height = leftImage.height
+
+        // 左半分と右半分のCGRectを定義
+        let leftRect = CGRect(x: 0, y: 0, width: width / 2, height: height)
+        let rightRect = CGRect(x: width / 2, y: 0, width: width / 2, height: height)
+
+        // 左右に分割
+        guard let leftHalfImage = leftImage.cropping(to: leftRect),
+          let rightHalfImage = leftImage.cropping(to: rightRect)
+        else {
+          self.error = NSError(
+            domain: "SpatialPhotoError", code: 1,
+            userInfo: [NSLocalizedDescriptionKey: "画像の分割に失敗しました"])
+          return
+        }
+
+        // temporaryディレクトリのパスを作成
+        let leftImageURL = URL(fileURLWithPath: NSTemporaryDirectory())
+          .appendingPathComponent("left_split.jpg")
+        let rightImageURL = URL(fileURLWithPath: NSTemporaryDirectory())
+          .appendingPathComponent("right_split.jpg")
+
+        // CGImageをJPEGデータに変換して保存
+        try saveCGImageToJPEG(leftHalfImage, to: leftImageURL)
+        try saveCGImageToJPEG(rightHalfImage, to: rightImageURL)
+
+        // 分割した画像で空間写真を生成
+        try generateSpatialPhoto(
+          leftImageURL: leftImageURL,
+          rightImageURL: rightImageURL
+        )
+      } catch {
+        self.error = error
+      }
+    }
+  }
+
+  private func saveCGImageToJPEG(_ cgImage: CGImage, to url: URL) throws {
+    guard
+      let destination = CGImageDestinationCreateWithURL(
+        url as CFURL,
+        UTType.heic.identifier as CFString,
+        1,
+        nil
+      )
+    else {
+      throw NSError(
+        domain: "SpatialPhotoError", code: 2,
+        userInfo: [NSLocalizedDescriptionKey: "HEICファイルの作成に失敗しました"])
+    }
+
+    CGImageDestinationAddImage(destination, cgImage, nil)
+
+    if !CGImageDestinationFinalize(destination) {
+      throw NSError(
+        domain: "SpatialPhotoError", code: 3,
+        userInfo: [NSLocalizedDescriptionKey: "HEICファイルの保存に失敗しました"])
+    }
   }
 
   func generateSpatialPhoto(leftImageURL: URL, rightImageURL: URL) throws {
