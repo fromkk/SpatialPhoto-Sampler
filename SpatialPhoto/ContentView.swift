@@ -136,8 +136,8 @@ struct ContentView: View {
                   .offset(x: proxy.size.width * adjustedValue)
                   .blendMode(.normal)
                 }
-                .compositingGroup()
               }
+              .compositingGroup()
               .aspectRatio(5712 / 4284, contentMode: .fit)
 
               Slider(
