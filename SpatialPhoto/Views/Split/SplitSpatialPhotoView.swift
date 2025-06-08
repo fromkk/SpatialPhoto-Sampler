@@ -37,9 +37,9 @@ struct SplitSpatialPhotoView: View {
 
   var adjustedValue: CGFloat {
     if overlayMode == .motionManager {
-      // value = 0 (左傾き), 0.015 (中央), 0.03 (右傾き) にマッピング
+      // value = 0 (左傾き), 0.1 (中央), 0.2 (右傾き) にマッピング
       let normalizedValue = min(max((motionManager.deviceTilt + .pi / 4) / (.pi / 2), 0), 1)
-      return 0.015 + (normalizedValue - 0.5) * 0.03
+      return 0.1 + (normalizedValue - 0.5) * 0.2
     } else {
       return value
     }
@@ -138,11 +138,11 @@ struct SplitSpatialPhotoView: View {
                 }
               }
               .compositingGroup()
-              .aspectRatio(5712 / 4284, contentMode: .fit)
+              .padding()
 
               Slider(
                 value: overlayMode == .motionManager ? .constant(adjustedValue) : $value,
-                in: 0...0.03)
+                in: 0...0.2)
               Text("\(adjustedValue)")
 
               Picker(
