@@ -18,6 +18,7 @@ struct GenerateSplitView: View {
   @State var rightImageOrientation: Image.Orientation?
 
   @State var error: (any Error)?
+  @State var isSaveSuccessAlertPresented: Bool = false
 
   enum ImageType {
     case left
@@ -192,6 +193,16 @@ struct GenerateSplitView: View {
     } message: {
       Text(error?.localizedDescription ?? "")
     }
+    .alert(
+      "保存完了",
+      isPresented: $isSaveSuccessAlertPresented
+    ) {
+      Button("OK") {
+        isSaveSuccessAlertPresented = false
+      }
+    } message: {
+      Text("空間写真の保存が完了しました")
+    }
   }
 
   func deleteImage(_ imageType: ImageType) {
@@ -346,6 +357,14 @@ struct GenerateSplitView: View {
 
     PHPhotoLibrary.shared().performChanges {
       PHAssetChangeRequest.creationRequestForAssetFromImage(atFileURL: outputImageURL)
+    } completionHandler: { [self] success, error in
+      Task { @MainActor in
+        if success {
+          self.isSaveSuccessAlertPresented = true
+        } else if let error = error {
+          self.error = error
+        }
+      }
     }
   }
 }
