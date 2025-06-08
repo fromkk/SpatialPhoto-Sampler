@@ -22,7 +22,7 @@ struct GenerateSplitView: View {
   }
 
   var body: some View {
-    VStack {
+    VStack(spacing: 16) {
       HStack(spacing: 16) {
         Button {
           isLeftPhotosPickerPresented = true
@@ -36,11 +36,22 @@ struct GenerateSplitView: View {
               )
               .resizable()
               .aspectRatio(1, contentMode: .fit)
+
+              Button {
+                deleteImage(.left)
+              } label: {
+                Text("削除")
+                  .foregroundStyle(.background)
+                  .padding(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                  .background(Color.red)
+                  .clipShape(RoundedRectangle(cornerRadius: 8))
+              }
             } else {
               Image(systemName: "photo")
                 .font(.largeTitle)
             }
           }
+          .padding(8)
           .frame(maxWidth: .infinity, maxHeight: .infinity)
           .background(Color.accentColor.opacity(0.1))
           .aspectRatio(1, contentMode: .fit)
@@ -71,11 +82,22 @@ struct GenerateSplitView: View {
               )
               .resizable()
               .aspectRatio(1, contentMode: .fit)
+
+              Button {
+                deleteImage(.right)
+              } label: {
+                Text("削除")
+                  .foregroundStyle(.background)
+                  .padding(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                  .background(Color.red)
+                  .clipShape(RoundedRectangle(cornerRadius: 8))
+              }
             } else {
               Image(systemName: "photo")
                 .font(.largeTitle)
             }
           }
+          .padding(8)
           .frame(maxWidth: .infinity, maxHeight: .infinity)
           .background(Color.accentColor.opacity(0.1))
           .aspectRatio(1, contentMode: .fit)
@@ -95,6 +117,37 @@ struct GenerateSplitView: View {
         )
       }
       .padding(16)
+
+      if leftImage != nil && rightImage == nil {
+        Button {
+
+        } label: {
+
+        }
+      } else if leftImage != nil && rightImage != nil {
+        Button {
+
+        } label: {
+
+        }
+      } else {
+        Text("画像を選択してください")
+          .font(.caption)
+          .foregroundStyle(.secondary)
+      }
+    }
+  }
+
+  func deleteImage(_ imageType: ImageType) {
+    switch imageType {
+    case .left:
+      leftImage = nil
+      leftPhotosPickerItem = nil
+      leftImageOrientation = nil
+    case .right:
+      rightImage = nil
+      rightPhotosPickerItem = nil
+      rightImageOrientation = nil
     }
   }
 
