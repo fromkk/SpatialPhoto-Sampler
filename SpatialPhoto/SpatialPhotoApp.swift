@@ -11,7 +11,19 @@ import SwiftUI
 struct SpatialPhotoApp: App {
   var body: some Scene {
     WindowGroup {
-      ContentView()
+      TabView {
+        SplitSpatialPhotoView()
+          .tabItem {
+            Image(systemName: "rectangle.split.2x1")
+            Text("Split")
+          }
+
+        GenerateSplitView()
+          .tabItem {
+            Image(systemName: "wand.and.sparkles")
+            Text("Generate")
+          }
+      }
     }
   }
 }

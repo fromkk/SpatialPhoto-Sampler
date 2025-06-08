@@ -21,7 +21,7 @@ enum OverlayMode: String, CaseIterable {
   case manual
 }
 
-struct ContentView: View {
+struct SplitSpatialPhotoView: View {
   @Bindable var motionManager = MotionManager()
 
   @State var isPresented: Bool = false
@@ -336,5 +336,5 @@ struct ContentView: View {
 }
 
 #Preview {
-  ContentView()
+  SplitSpatialPhotoView()
 }
