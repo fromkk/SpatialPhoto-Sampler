@@ -16,6 +16,8 @@ struct GenerateSplitView: View {
   @State var leftImageOrientation: Image.Orientation?
   @State var rightImageOrientation: Image.Orientation?
 
+  @State var error: (any Error)?
+
   enum ImageType {
     case left
     case right
@@ -35,14 +37,16 @@ struct GenerateSplitView: View {
                 orientation: leftImageOrientation ?? .up
               )
               .resizable()
-              .aspectRatio(1, contentMode: .fit)
+              .aspectRatio(contentMode: .fit)
 
               Button {
                 deleteImage(.left)
               } label: {
                 Text("削除")
                   .foregroundStyle(.background)
-                  .padding(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                  .padding(
+                    EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
+                  )
                   .background(Color.red)
                   .clipShape(RoundedRectangle(cornerRadius: 8))
               }
@@ -81,14 +85,16 @@ struct GenerateSplitView: View {
                 orientation: rightImageOrientation ?? .up
               )
               .resizable()
-              .aspectRatio(1, contentMode: .fit)
+              .aspectRatio(contentMode: .fit)
 
               Button {
                 deleteImage(.right)
               } label: {
                 Text("削除")
                   .foregroundStyle(.background)
-                  .padding(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                  .padding(
+                    EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
+                  )
                   .background(Color.red)
                   .clipShape(RoundedRectangle(cornerRadius: 8))
               }
@@ -120,21 +126,70 @@ struct GenerateSplitView: View {
 
       if leftImage != nil && rightImage == nil {
         Button {
-
+          splitAndGenerateSpatialPhoto()
         } label: {
-
+          Text("画像を分割して空間写真を生成する")
+            .padding(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+            .foregroundStyle(.background)
+            .background(Color.accentColor)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
         }
-      } else if leftImage != nil && rightImage != nil {
+      } else if let leftPhotosPickerItem, let rightPhotosPickerItem {
         Button {
+          let leftImageURL = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("left.jpg")
+          let rightImageURL = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("right.jpg")
+          Task {
+            do {
+              guard
+                let leftImageData =
+                  try await leftPhotosPickerItem.loadTransferable(
+                    type: Data.self
+                  ),
+                let rightImageData =
+                  try await rightPhotosPickerItem.loadTransferable(
+                    type: Data.self
+                  )
+              else {
+                return
+              }
+              try leftImageData.write(to: leftImageURL)
+              try rightImageData.write(to: rightImageURL)
 
+              try generateSpatialPhoto(
+                leftImageURL: leftImageURL,
+                rightImageURL: rightImageURL
+              )
+            } catch {
+              self.error = error
+            }
+          }
         } label: {
-
+          Text("空間写真を生成する")
+            .padding(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+            .foregroundStyle(.background)
+            .background(Color.accentColor)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
         }
       } else {
         Text("画像を選択してください")
           .font(.caption)
           .foregroundStyle(.secondary)
       }
+    }
+    .alert(
+      "エラー",
+      isPresented: Binding(
+        get: { error != nil },
+        set: { _ in error = nil }
+      )
+    ) {
+      Button("OK") {
+        error = nil
+      }
+    } message: {
+      Text(error?.localizedDescription ?? "")
     }
   }
 
@@ -205,6 +260,28 @@ struct GenerateSplitView: View {
       return .down
     case .downMirrored:
       return .downMirrored
+    }
+  }
+
+  func splitAndGenerateSpatialPhoto() {
+    guard let leftImage else { return }
+  }
+
+  func generateSpatialPhoto(leftImageURL: URL, rightImageURL: URL) throws {
+    let outputImageURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(
+      "output.heic")
+    let converter = SpatialPhotoConverter(
+      leftImageURL: leftImageURL,
+      rightImageURL: rightImageURL,
+      outputImageURL: outputImageURL,
+      baselineInMillimeters: 1,
+      horizontalFOV: 42,
+      disparityAdjustment: 0
+    )
+    try converter.convert()
+
+    PHPhotoLibrary.shared().performChanges {
+      PHAssetChangeRequest.creationRequestForAssetFromImage(atFileURL: outputImageURL)
     }
   }
 }
