@@ -21,7 +21,7 @@ enum OverlayMode: String, CaseIterable {
   case manual
 }
 
-struct ContentView: View {
+struct SplitSpatialPhotoView: View {
   @Bindable var motionManager = MotionManager()
 
   @State var isPresented: Bool = false
@@ -116,55 +116,30 @@ struct ContentView: View {
             case .slide:
               ZStack {
                 GeometryReader { proxy in
-                  ZStack {
-                    Image(
-                      decorative: leftImage,
-                      scale: 1,
-                      orientation: orientation ?? .up
-                    )
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-
-                    LinearGradient(
-                      gradient: Gradient(
-                        colors: [
-                          .black.opacity(0),
-                          .black.opacity(0.5),
-                        ]
-                      ),
-                      startPoint: .leading,
-                      endPoint: .trailing
-                    )
-                    .blendMode(.destinationOut)
-                  }
-                  .compositingGroup()
+                  Image(
+                    decorative: leftImage,
+                    scale: 1,
+                    orientation: orientation ?? .up
+                  )
+                  .resizable()
+                  .aspectRatio(contentMode: .fit)
                   .offset(x: -proxy.size.width * adjustedValue)
 
-                  ZStack {
-                    Image(
-                      decorative: rightImage,
-                      scale: 1,
-                      orientation: orientation ?? .up
-                    )
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-
-                    LinearGradient(
-                      gradient: Gradient(
-                        colors: [
-                          .black.opacity(0),
-                          .black.opacity(0.5),
-                        ]
-                      ),
-                      startPoint: .trailing,
-                      endPoint: .leading
-                    )
-                    .blendMode(.destinationOut)
-                  }
-                  .compositingGroup()
+                  Image(
+                    decorative: rightImage,
+                    scale: 1,
+                    orientation: orientation ?? .up
+                  )
+                  .resizable()
+                  .aspectRatio(contentMode: .fit)
+                  .opacity(0.5)
                   .offset(x: proxy.size.width * adjustedValue)
+                  .blendMode(.normal)
                 }
               }
+              .compositingGroup()
+              .aspectRatio(5712 / 4284, contentMode: .fit)
+
               Slider(
                 value: overlayMode == .motionManager ? .constant(adjustedValue) : $value,
                 in: 0...0.03)
@@ -361,5 +336,5 @@ struct ContentView: View {
 }
 
 #Preview {
-  ContentView()
+  SplitSpatialPhotoView()
 }
