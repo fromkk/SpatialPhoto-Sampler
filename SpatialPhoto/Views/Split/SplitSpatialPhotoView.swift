@@ -142,7 +142,7 @@ struct SplitSpatialPhotoView: View {
 
               Slider(
                 value: overlayMode == .motionManager ? .constant(adjustedValue) : $value,
-                in: 0...0.2)
+                in: -0.2...0.2)
               Text("\(adjustedValue)")
 
               Picker(
