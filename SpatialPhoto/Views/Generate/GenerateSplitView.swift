@@ -349,7 +349,7 @@ struct GenerateSplitView: View {
       leftImageURL: leftImageURL,
       rightImageURL: rightImageURL,
       outputImageURL: outputImageURL,
-      baselineInMillimeters: 1,
+      baselineInMillimeters: 10,
       horizontalFOV: 42,
       disparityAdjustment: 0
     )
