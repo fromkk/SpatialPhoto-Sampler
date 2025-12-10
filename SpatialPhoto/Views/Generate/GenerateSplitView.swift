@@ -20,6 +20,10 @@ struct GenerateSplitView: View {
   @State var error: (any Error)?
   @State var isSaveSuccessAlertPresented: Bool = false
 
+  @State var baselineInMillimeters: Double = 10
+  @State var horizontalFOV: Double = 42
+  @State var disparityAdjustment: Double = 0
+
   enum ImageType {
     case left
     case right
@@ -125,6 +129,27 @@ struct GenerateSplitView: View {
         )
       }
       .padding(16)
+
+      VStack(spacing: 12) {
+        VStack(alignment: .leading, spacing: 4) {
+          Text("Baseline (mm): \(String(format: "%.1f", baselineInMillimeters))")
+            .font(.caption)
+          Slider(value: $baselineInMillimeters, in: 1...100, step: 0.5)
+        }
+        
+        VStack(alignment: .leading, spacing: 4) {
+          Text("Horizontal FOV: \(String(format: "%.1f", horizontalFOV))")
+            .font(.caption)
+          Slider(value: $horizontalFOV, in: 10...120, step: 1)
+        }
+        
+        VStack(alignment: .leading, spacing: 4) {
+          Text("Disparity Adjustment: \(String(format: "%.2f", disparityAdjustment))")
+            .font(.caption)
+          Slider(value: $disparityAdjustment, in: -10...10, step: 0.1)
+        }
+      }
+      .padding(.horizontal, 16)
 
       if leftImage != nil && rightImage == nil {
         Button {
@@ -349,9 +374,9 @@ struct GenerateSplitView: View {
       leftImageURL: leftImageURL,
       rightImageURL: rightImageURL,
       outputImageURL: outputImageURL,
-      baselineInMillimeters: 10,
-      horizontalFOV: 42,
-      disparityAdjustment: 0
+      baselineInMillimeters: baselineInMillimeters,
+      horizontalFOV: horizontalFOV,
+      disparityAdjustment: disparityAdjustment
     )
     try converter.convert()
 
